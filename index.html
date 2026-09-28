@@ -109,6 +109,10 @@
 
         /* Pengaturan khusus untuk mencetak (Print) */
         @media print {
+            @page {
+                size: A4 portrait;
+                margin: 6mm 5mm;
+            }
             body {
                 background: white !important;
                 background-color: white !important;
@@ -128,7 +132,7 @@
             .cards-container {
                 display: grid !important;
                 grid-template-columns: repeat(2, 92mm) !important;
-                gap: 3mm 4mm !important;
+                gap: 2.5mm 3.5mm !important;
                 padding: 0 !important;
                 margin: 0 auto !important;
                 justify-content: center;
@@ -149,11 +153,10 @@
             max-height: 198px;
             border: 2px solid black;
             background-color: white;
-            padding: 2px;
+            padding: 2.5px;
             box-sizing: border-box;
             font-family: 'Times New Roman', Times, serif;
             position: relative;
-            overflow: hidden;
             box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
             transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
@@ -171,7 +174,7 @@
         .card-inner-border {
             border: 1px solid black;
             height: 100%;
-            padding: 4px 5px;
+            padding: 4px 6px;
             display: flex;
             flex-direction: column;
             position: relative;
@@ -181,16 +184,17 @@
         .header-section {
             display: flex;
             align-items: center;
-            border-bottom: 2px solid black;
-            padding-bottom: 3px;
+            border-bottom: 2.5px double black;
+            padding-bottom: 2px;
+            margin-top: 1px;
             margin-bottom: 4px;
         }
 
         .logo-img {
-            width: 38px;
-            height: 38px;
+            width: 32px;
+            height: 32px;
             object-fit: contain;
-            margin-right: 6px;
+            margin-right: 4px;
             flex-shrink: 0;
         }
 
@@ -205,28 +209,32 @@
             font-weight: bold;
             margin: 0;
             letter-spacing: -0.2px;
+            white-space: nowrap;
         }
 
         .header-text h2 {
             font-size: 9px;
             font-weight: bold;
             margin: 0;
+            white-space: nowrap;
         }
 
         .header-text p {
-            font-size: 7.5px;
+            font-size: 7.8px;
             margin: 0;
+            white-space: nowrap;
         }
 
         .info-section {
             display: flex;
             flex-direction: column;
             gap: 1.5px;
-            font-size: 9.5px;
+            font-size: 9.8px;
             font-weight: bold;
             position: relative;
             z-index: 10;
-            line-height: 1.25;
+            line-height: 1.2;
+            margin-left: 16px; /* Ruang aman dari kode vertikal */
         }
 
         .info-row {
@@ -235,11 +243,11 @@
         }
 
         .info-label {
-            width: 55px;
+            width: 50px;
         }
 
         .info-colon {
-            width: 8px;
+            width: 6px;
             text-align: center;
         }
 
@@ -248,28 +256,28 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding-right: 60px; /* Ruang agar tidak menutupi nomor RUANG */
+            padding-right: 58px; /* Ruang agar tidak menutupi nomor RUANG */
         }
 
-        /* Posisi Ruang */
+        /* Posisi Ruang - Dimasukkan sedikit dari pinggir kanan */
         .room-text-container {
             position: absolute;
-            right: 0;
+            right: 4px;
             top: 0;
             font-weight: bold;
             font-size: 10px;
             white-space: nowrap;
         }
 
-        /* Bagian Tanda Tangan */
+        /* Bagian Tanda Tangan - Dinaikkan dan dimasukkan sedikit dari pinggir */
         .signature-section {
             position: absolute;
-            bottom: 3px;
-            right: 4px;
+            bottom: 5px;
+            right: 6px;
             text-align: center;
             font-size: 8.5px;
             width: 135px;
-            line-height: 1.1;
+            line-height: 1.15;
         }
 
         .signature-date {
@@ -278,14 +286,14 @@
 
         .signature-title {
             font-weight: bold;
-            margin-bottom: 1px;
+            margin-bottom: 0px;
         }
 
         .signature-img {
-            height: 42px;
-            max-width: 110px;
+            height: 32px;
+            max-width: 100px;
             object-fit: contain;
-            margin: -4px auto -9px auto;
+            margin: -3px auto -7px auto;
             display: block;
             position: relative;
             z-index: 5;
@@ -302,12 +310,13 @@
             font-weight: bold;
         }
 
+        /* Teks Kode Vertikal - Dimasukkan sedikit dari pinggir kiri & bawah */
         .code-text {
             position: absolute;
-            bottom: 4px;
-            left: 4px;
+            bottom: 5px;
+            left: 15px;
             font-weight: bold;
-            font-size: 10px;
+            font-size: 9.5px;
             transform: rotate(-90deg);
             transform-origin: left bottom;
             white-space: nowrap;
@@ -499,7 +508,7 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            if (!file.name.endsWith('.csv')) {
+            if (!file.name.endsWith('.csv') && !file.name.endsWith('.txt')) {
                 showMessage('Harap unggah file dengan format .csv', 'text-rose-600');
                 return;
             }
@@ -515,35 +524,68 @@
             reader.readAsText(file);
         });
 
-        // Parse CSV
+        // Parse CSV dengan dukungan auto-detect delimiter (koma, titik koma, tab) & Hapus BOM
         function parseCSV(str) {
-            const arr = [];
-            let quote = false;
-            let row, col, c;
-            
+            // Hapus karakter BOM (Byte Order Mark) jika ada dari Excel
+            if (str.charCodeAt(0) === 0xFEFF) {
+                str = str.slice(1);
+            }
             str = str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-            for (row = col = c = 0; c < str.length; c++) {
-                var cc = str[c], nc = str[c+1];
-                arr[row] = arr[row] || [];
-                arr[row][col] = arr[row][col] || '';
+            // Deteksi otomatis pemisah/delimiter (titik koma ';', koma ',', atau tab '\t')
+            const firstLine = str.split('\n')[0] || '';
+            let delimiter = ',';
+            const semicolons = (firstLine.match(/;/g) || []).length;
+            const commas = (firstLine.match(/,/g) || []).length;
+            const tabs = (firstLine.match(/\t/g) || []).length;
 
-                if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
-                if (cc == '"') { quote = !quote; continue; }
-                if (cc == ',' && !quote) { ++col; continue; }
-                if (cc == '\n' && !quote) { ++row; col = 0; continue; }
+            if (semicolons > commas && semicolons > tabs) {
+                delimiter = ';';
+            } else if (tabs > commas && tabs > semicolons) {
+                delimiter = '\t';
+            }
+
+            const arr = [];
+            let quote = false;
+            let row = 0, col = 0;
+            arr[row] = [''];
+
+            for (let c = 0; c < str.length; c++) {
+                const cc = str[c], nc = str[c + 1];
+
+                if (cc === '"' && quote && nc === '"') { 
+                    arr[row][col] += cc; 
+                    c++; 
+                    continue; 
+                }
+                if (cc === '"') { 
+                    quote = !quote; 
+                    continue; 
+                }
+                if (cc === delimiter && !quote) { 
+                    col++; 
+                    arr[row][col] = ''; 
+                    continue; 
+                }
+                if (cc === '\n' && !quote) { 
+                    row++; 
+                    col = 0; 
+                    arr[row] = ['']; 
+                    continue; 
+                }
                 
                 arr[row][col] += cc;
             }
             return arr;
         }
 
-        // Memproses data
+        // Memproses data dengan pencocokan nama kolom fleksibel
         function processData(csvText) {
             try {
                 const rows = parseCSV(csvText);
                 
-                if (rows.length > 0 && rows[rows.length - 1].length <= 1 && !rows[rows.length - 1][0]) {
+                // Hapus baris kosong di akhir
+                while (rows.length > 0 && rows[rows.length - 1].every(cell => !cell.trim())) {
                     rows.pop();
                 }
 
@@ -552,27 +594,47 @@
                     return;
                 }
 
-                const headers = rows[0].map(h => h.trim().toLowerCase());
+                const rawHeaders = rows[0].map(h => h.trim());
                 const dataPeserta = [];
                 
+                // Helper untuk mencocokkan nama kolom secara fleksibel (mengabaikan spasi, titik, kapitalisasi)
+                function findValue(rowObj, possibleKeys) {
+                    for (const key of Object.keys(rowObj)) {
+                        const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        for (const possible of possibleKeys) {
+                            const cleanPossible = possible.toLowerCase().replace(/[^a-z0-9]/g, '');
+                            if (cleanKey === cleanPossible) {
+                                return rowObj[key];
+                            }
+                        }
+                    }
+                    return '';
+                }
+
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i];
-                    const obj = {};
+                    if (row.length === 1 && !row[0].trim()) continue; // Skip baris kosong
                     
-                    headers.forEach((header, index) => {
-                        obj[header] = row[index] ? row[index].trim() : '';
+                    const rowObj = {};
+                    rawHeaders.forEach((header, index) => {
+                        rowObj[header] = row[index] ? row[index].trim() : '';
                     });
                     
                     const item = {
-                        No_Peserta: obj['no_peserta'] || obj['no. peserta'] || obj['nopes'] || '',
-                        Nama: obj['nama'] || obj['nama_lengkap'] || '',
-                        Kelas: obj['kelas'] || '',
-                        NISN: obj['nisn'] || '',
-                        Ruang: obj['ruang'] || obj['ruangan'] || '',
-                        Kode: obj['kode'] || ''
+                        No_Peserta: findValue(rowObj, ['no_peserta', 'no peserta', 'no. peserta', 'nopes', 'nomor peserta', 'no_pes']),
+                        Nama: findValue(rowObj, ['nama', 'nama_lengkap', 'nama peserta', 'nama siswa', 'nama_peserta']),
+                        Kelas: findValue(rowObj, ['kelas', 'kls', 'class']),
+                        NISN: findValue(rowObj, ['nisn', 'nis']),
+                        Ruang: findValue(rowObj, ['ruang', 'ruangan', 'rg', 'room']),
+                        Kode: findValue(rowObj, ['kode', 'kode_soal', 'kode_peserta', 'code'])
                     };
                     
                     dataPeserta.push(item);
+                }
+
+                if (dataPeserta.length === 0) {
+                    showMessage('Tidak ada data yang valid ditemukan pada file CSV.', 'text-rose-600');
+                    return;
                 }
 
                 renderCards(dataPeserta);
