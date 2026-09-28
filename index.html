@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Kartu Ujian</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Pengaturan khusus untuk mencetak (Print) */
+        @media print {
+            body {
+                background: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-area {
+                padding: 0 !important;
+                margin: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+            /* Mengatur agar kartu tercetak rapi di halaman */
+            .cards-container {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr); /* 2 kartu per baris */
+                gap: 20px;
+                padding: 20px;
+            }
+            .card-wrapper {
+                break-inside: avoid; /* Mencegah kartu terpotong halaman */
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Styling spesifik untuk kartu (mengikuti gambar) */
+        .exam-card {
+            width: 400px;
+            height: 250px;
+            border: 2px solid #2f5d34; /* Warna hijau gelap mirip di gambar */
+            background-color: #d1e7dd; /* Warna latar hijau muda/kebiruan */
+            padding: 4px;
+            box-sizing: border-box;
+            font-family: 'Times New Roman', Times, serif; /* Font resmi */
+            position: relative;
+        }
+
+        .card-inner-border {
+            border: 1px solid #2f5d34;
+            height: 100%;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .header-section {
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid #2f5d34;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        .logo-placeholder {
+            width: 50px;
+            height: 50px;
+            border: 1px dashed #2f5d34;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            text-align: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+            background-color: white;
+        }
+
+        .header-text {
+            text-align: center;
+            flex-grow: 1;
+            line-height: 1.2;
+        }
+
+        .header-text h1 {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .header-text h2 {
+            font-size: 13px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .header-text p {
+            font-size: 10px;
+            margin: 0;
+        }
+
+        .info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            position: relative;
+            z-index: 10;
+        }
+
+        .info-row {
+            display: flex;
+        }
+
+        .info-label {
+            width: 80px;
+        }
+
+        .info-colon {
+            width: 15px;
+            text-align: center;
+        }
+
+        .info-value {
+            flex-grow: 1;
+        }
+
+        /* Posisi Ruang - DIPERBARUI */
+        .room-text-container {
+            position: absolute;
+            right: 10px;
+            top: 0;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        /* Bagian Tanda Tangan */
+        .signature-section {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            text-align: center;
+            font-size: 11px;
+            width: 180px;
+        }
+
+        .signature-date {
+            margin-bottom: 2px;
+        }
+
+        .signature-title {
+            font-weight: bold;
+            margin-bottom: 30px; /* Ruang untuk stempel dan ttd */
+        }
+
+        .signature-name {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .signature-nip {
+            font-weight: bold;
+        }
+
+        /* Stempel/Logo Background (Watermark) */
+        .watermark {
+            position: absolute;
+            bottom: 5px;
+            left: 20px;
+            width: 100px;
+            height: 100px;
+            opacity: 0.15;
+            border: 2px solid #2f5d34;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            text-align: center;
+            transform: rotate(-15deg);
+            z-index: 1;
+        }
+        
+        .code-text {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            transform: rotate(-90deg);
+            transform-origin: left bottom;
+        }
+
+        /* Container untuk tampilan layar */
+        #preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8 font-sans text-gray-800">
+
+    <div class="max-w-4xl mx-auto mb-8 bg-white p-6 rounded-lg shadow-md no-print border border-gray-200">
+        <h1 class="text-2xl font-bold mb-4 text-center text-green-800">Aplikasi Cetak Kartu Ujian</h1>
+        
+        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <h2 class="font-semibold text-blue-800 mb-2">Petunjuk Penggunaan:</h2>
+            <ol class="list-decimal list-inside text-sm text-blue-700 space-y-1">
+                <li>Buat file Excel / Spreadsheet berisi data siswa.</li>
+                <li>Pastikan baris pertama adalah judul kolom: <strong>No_Peserta, Nama, Kelas, NISN, Ruang, Kode</strong>.</li>
+                <li>Simpan file tersebut dalam format <strong>CSV (Comma Delimited)</strong>.</li>
+                <li>Klik tombol di bawah untuk mengunggah file CSV tersebut.</li>
+                <li>Klik "Cetak Kartu" untuk memunculkan dialog print.</li>
+            </ol>
+        </div>
+
+        <div class="flex flex-col md:flex-row items-center gap-4 justify-center">
+            <div class="relative">
+                <input type="file" id="csv-upload" accept=".csv" class="hidden">
+                <label for="csv-upload" class="cursor-pointer flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded-md shadow-sm transition duration-200 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Unggah Data CSV
+                </label>
+            </div>
+            
+            <button onclick="window.print()" id="print-btn" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-md shadow-sm transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Cetak Kartu
+            </button>
+
+            <button onclick="loadSampleData()" class="text-sm text-gray-500 underline hover:text-gray-700 mt-2 md:mt-0">
+                Gunakan Data Contoh
+            </button>
+        </div>
+        
+        <div id="status-message" class="mt-4 text-center text-sm font-medium h-5"></div>
+    </div>
+
+    <!-- Area ini yang akan dicetak -->
+    <div class="print-area">
+        <div id="preview-container" class="cards-container">
+            <!-- Kartu akan digenerate di sini oleh JavaScript -->
+            <div class="text-center w-full text-gray-400 py-10 no-print" id="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Belum ada data. Silakan unggah file CSV atau gunakan data contoh.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elemen DOM
+        const csvUpload = document.getElementById('csv-upload');
+        const previewContainer = document.getElementById('preview-container');
+        const printBtn = document.getElementById('print-btn');
+        const statusMessage = document.getElementById('status-message');
+        const emptyState = document.getElementById('empty-state');
+
+        // Template HTML untuk satu kartu
+        // Desain disesuaikan semirip mungkin dengan gambar yang diberikan
+        function createCardHTML(data) {
+            // Default nilai jika data kosong
+            const noPeserta = data.No_Peserta || '-';
+            const nama = data.Nama || '-';
+            const kelas = data.Kelas || '-';
+            const nisn = data.NISN || '-';
+            const ruang = data.Ruang || '-';
+            const kode = data.Kode || ''; // Teks vertikal di kiri bawah
+
+            return `
+                <div class="card-wrapper">
+                    <div class="exam-card">
+                        <div class="card-inner-border">
+                            
+                            <!-- Header -->
+                            <div class="header-section">
+                                <div class="logo-placeholder">Logo SMP</div>
+                                <div class="header-text">
+                                    <h1>ASESMEN SUMATIF TENGAH SEMESTER GANJIL</h1>
+                                    <h2>SMP MUHAMMADIYAH 2 DEPOK</h2>
+                                    <h2>TAHUN AJARAN 2026/2027</h2>
+                                    <p>Jl. Swadaya IV Karangasem Condongcatur Depok Sleman</p>
+                                </div>
+                            </div>
+
+                            <!-- Watermark / Stempel Background -->
+                            <div class="watermark">STEMPEL PANITIA</div>
+
+                            <!-- Informasi Siswa -->
+                            <div class="info-section">
+                                <div class="info-row relative">
+                                    <div class="info-label">No. Pes</div>
+                                    <div class="info-colon">:</div>
+                                    <div class="info-value">${noPeserta}</div>
+                                    
+                                    <!-- Teks Ruang diletakkan sejajar dengan No Peserta -->
+                                    <div class="room-text-container">RUANG ${ruang}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">Nama</div>
+                                    <div class="info-colon">:</div>
+                                    <div class="info-value">${nama}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">Kelas</div>
+                                    <div class="info-colon">:</div>
+                                    <div class="info-value">${kelas}</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">NISN</div>
+                                    <div class="info-colon">:</div>
+                                    <div class="info-value">${nisn}</div>
+                                </div>
+                            </div>
+
+                            <!-- Teks Kode Vertikal Kiri Bawah -->
+                            <div class="code-text">${kode}</div>
+
+                            <!-- Tanda Tangan -->
+                            <div class="signature-section">
+                                <div class="signature-date">Depok, 18 September 2026</div>
+                                <div class="signature-title">Kepala Sekolah</div>
+                                <!-- Ruang kosong untuk ttd -->
+                                <div class="signature-name">Hendro Sucipto, M.Pd.</div>
+                                <div class="signature-nip">NBM. 1060557</div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Event Listener untuk Upload CSV
+        csvUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validasi ekstensi
+            if (!file.name.endsWith('.csv')) {
+                showMessage('Harap unggah file dengan format .csv', 'text-red-600');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const text = event.target.result;
+                processData(text);
+            };
+            reader.onerror = function() {
+                showMessage('Gagal membaca file.', 'text-red-600');
+            };
+            reader.readAsText(file);
+        });
+
+        // Fungsi sederhana untuk memparsing CSV
+        function parseCSV(str) {
+            const arr = [];
+            let quote = false;
+            let row, col, c;
+            
+            // Penanganan baris baru yang aman (Windows/Unix)
+            str = str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+            for (row = col = c = 0; c < str.length; c++) {
+                var cc = str[c], nc = str[c+1];
+                arr[row] = arr[row] || [];
+                arr[row][col] = arr[row][col] || '';
+
+                if (cc == '"' && quote && nc == '"') { arr[row][col] += cc; ++c; continue; }
+                if (cc == '"') { quote = !quote; continue; }
+                if (cc == ',' && !quote) { ++col; continue; }
+                if (cc == '\n' && !quote) { ++row; col = 0; continue; }
+                
+                arr[row][col] += cc;
+            }
+            return arr;
+        }
+
+        // Memproses string CSV menjadi data objek dan merender kartu
+        function processData(csvText) {
+            try {
+                const rows = parseCSV(csvText);
+                
+                // Hapus baris kosong di akhir
+                if (rows.length > 0 && rows[rows.length - 1].length <= 1 && !rows[rows.length - 1][0]) {
+                    rows.pop();
+                }
+
+                if (rows.length < 2) {
+                    showMessage('File CSV kosong atau tidak memiliki data.', 'text-red-600');
+                    return;
+                }
+
+                // Mengambil header (baris pertama)
+                const headers = rows[0].map(h => h.trim().toLowerCase());
+                
+                const dataPeserta = [];
+                
+                // Mulai dari baris ke-2 (index 1)
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    const obj = {};
+                    
+                    // Memetakan nilai ke nama kolom berdasarkan index
+                    headers.forEach((header, index) => {
+                        obj[header] = row[index] ? row[index].trim() : '';
+                    });
+                    
+                    // Normalisasi nama properti (jaga-jaga penamaan kolom beda sedikit)
+                    const item = {
+                        No_Peserta: obj['no_peserta'] || obj['no. peserta'] || obj['nopes'] || '',
+                        Nama: obj['nama'] || obj['nama_lengkap'] || '',
+                        Kelas: obj['kelas'] || '',
+                        NISN: obj['nisn'] || '',
+                        Ruang: obj['ruang'] || obj['ruangan'] || '',
+                        Kode: obj['kode'] || ''
+                    };
+                    
+                    dataPeserta.push(item);
+                }
+
+                renderCards(dataPeserta);
+                showMessage(`Berhasil memuat ${dataPeserta.length} data.`, 'text-green-600');
+                printBtn.disabled = false;
+
+            } catch (error) {
+                console.error(error);
+                showMessage('Terjadi kesalahan saat memproses data CSV.', 'text-red-600');
+            }
+        }
+
+        // Merender HTML ke layar
+        function renderCards(data) {
+            if (emptyState) emptyState.style.display = 'none';
+            
+            let htmlContent = '';
+            data.forEach(item => {
+                htmlContent += createCardHTML(item);
+            });
+            
+            previewContainer.innerHTML = htmlContent;
+        }
+
+        // Menampilkan pesan status
+        function showMessage(msg, colorClass) {
+            statusMessage.textContent = msg;
+            statusMessage.className = `mt-4 text-center text-sm font-medium h-5 ${colorClass}`;
+            setTimeout(() => {
+                statusMessage.textContent = '';
+            }, 5000);
+        }
+
+        // Fungsi untuk me-load data contoh
+        function loadSampleData() {
+            const sampleCSV = `No_Peserta,Nama,Kelas,NISN,Ruang,Kode
+04-0087-062-9,ILHAM FAHLEVI,9C,0112920418,11,A442U
+04-0087-063-8,ANDI DARMAWAN,9A,0112920419,11,A442V
+04-0087-064-7,SITI AMINAH,9B,0112920420,12,A442W
+04-0087-065-6,BUDI SANTOSO,9C,0112920421,12,A442X`;
+            
+            processData(sampleCSV);
+        }
+    </script>
+</body>
+</html>
