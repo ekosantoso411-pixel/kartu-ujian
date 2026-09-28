@@ -6,17 +6,116 @@
     <title>Generator Kartu Ujian</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Animation keyframes for glowing ambient background blobs */
+        @keyframes floatBlob {
+            0% {
+                transform: translate(0px, 0px) scale(1) rotate(0deg);
+            }
+            33% {
+                transform: translate(50px, -40px) scale(1.1) rotate(120deg);
+            }
+            66% {
+                transform: translate(-30px, 30px) scale(0.95) rotate(240deg);
+            }
+            100% {
+                transform: translate(0px, 0px) scale(1) rotate(360deg);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+            }
+        }
+
+        /* Screen Animated Background Setup */
+        body {
+            background-color: #0f172a; /* Dark Slate background */
+            position: relative;
+        }
+
+        .bg-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatBlob 22s infinite ease-in-out;
+        }
+
+        .blob-1 {
+            width: 480px;
+            height: 480px;
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            top: -10%;
+            left: -5%;
+            animation-duration: 20s;
+        }
+
+        .blob-2 {
+            width: 520px;
+            height: 520px;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            bottom: -15%;
+            right: -8%;
+            animation-duration: 26s;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            width: 380px;
+            height: 380px;
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            top: 35%;
+            left: 40%;
+            animation-duration: 24s;
+            animation-delay: -10s;
+        }
+
+        /* Subtle animated grid background */
+        .bg-grid-overlay {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.7;
+        }
+
+        /* Modern Glassmorphic Panel */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3);
+        }
+
         /* Pengaturan khusus untuk mencetak (Print) */
         @media print {
-            /* Memaksa ukuran kertas A4 Portrait dengan margin 1cm */
-            @page {
-                size: A4 portrait;
-                margin: 10mm;
-            }
             body {
-                background: white;
+                background: white !important;
+                background-color: white !important;
+                margin: 0;
+                padding: 0;
             }
-            .no-print {
+            .no-print, .bg-blob, .bg-grid-overlay {
                 display: none !important;
             }
             .print-area {
@@ -25,54 +124,73 @@
                 background: transparent !important;
                 box-shadow: none !important;
             }
-            /* Mengatur agar kartu tercetak rapi di halaman (2 kolom x 5 baris) */
+            /* Grid 2 kolom x 5 baris presisi A4 */
             .cards-container {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px; /* Jarak antar kartu dikurangi agar muat */
-                padding: 0;
-                justify-items: center;
+                display: grid !important;
+                grid-template-columns: repeat(2, 92mm) !important;
+                gap: 3mm 4mm !important;
+                padding: 0 !important;
+                margin: 0 auto !important;
+                justify-content: center;
+                align-content: start;
             }
             .card-wrapper {
-                break-inside: avoid; /* Mencegah kartu terpotong antar halaman */
-                page-break-inside: avoid;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                animation: none !important;
             }
         }
 
-        /* Styling spesifik untuk kartu (Dimensi diperkecil agar muat 10 per A4) */
+        /* Dimensi kartu yang diproporsikan agar pas 10 kartu di A4 (92mm x 52mm) */
         .exam-card {
-            width: 340px;  /* Lebar disesuaikan */
-            height: 195px; /* Tinggi disesuaikan */
+            width: 92mm;
+            height: 52mm;
+            max-width: 348px;
+            max-height: 198px;
             border: 2px solid black;
             background-color: white;
-            padding: 3px;
+            padding: 2px;
             box-sizing: border-box;
-            font-family: 'Times New Roman', Times, serif; /* Font resmi */
+            font-family: 'Times New Roman', Times, serif;
             position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        @media screen {
+            .exam-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 30px -5px rgba(0,0,0,0.35);
+            }
+            .card-wrapper {
+                animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
         }
 
         .card-inner-border {
             border: 1px solid black;
             height: 100%;
-            padding: 6px;
+            padding: 4px 5px;
             display: flex;
             flex-direction: column;
             position: relative;
+            box-sizing: border-box;
         }
 
         .header-section {
             display: flex;
             align-items: center;
             border-bottom: 2px solid black;
-            padding-bottom: 4px;
-            margin-bottom: 6px;
+            padding-bottom: 3px;
+            margin-bottom: 4px;
         }
 
         .logo-img {
-            width: 42px;
-            height: 42px;
+            width: 38px;
+            height: 38px;
             object-fit: contain;
-            margin-right: 10px;
+            margin-right: 6px;
             flex-shrink: 0;
         }
 
@@ -83,30 +201,32 @@
         }
 
         .header-text h1 {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             margin: 0;
+            letter-spacing: -0.2px;
         }
 
         .header-text h2 {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             margin: 0;
         }
 
         .header-text p {
-            font-size: 8px;
+            font-size: 7.5px;
             margin: 0;
         }
 
         .info-section {
             display: flex;
             flex-direction: column;
-            gap: 2px;
-            font-size: 10px;
+            gap: 1.5px;
+            font-size: 9.5px;
             font-weight: bold;
             position: relative;
             z-index: 10;
+            line-height: 1.25;
         }
 
         .info-row {
@@ -115,51 +235,57 @@
         }
 
         .info-label {
-            width: 60px;
+            width: 55px;
         }
 
         .info-colon {
-            width: 10px;
+            width: 8px;
             text-align: center;
         }
 
         .info-value {
             flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 60px; /* Ruang agar tidak menutupi nomor RUANG */
         }
 
         /* Posisi Ruang */
         .room-text-container {
             position: absolute;
-            right: 5px;
+            right: 0;
             top: 0;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 10px;
+            white-space: nowrap;
         }
 
         /* Bagian Tanda Tangan */
         .signature-section {
             position: absolute;
-            bottom: 5px;
-            right: 5px;
+            bottom: 3px;
+            right: 4px;
             text-align: center;
-            font-size: 9px;
-            width: 150px;
+            font-size: 8.5px;
+            width: 135px;
+            line-height: 1.1;
         }
 
         .signature-date {
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
 
         .signature-title {
             font-weight: bold;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
 
         .signature-img {
-            height: 48px;
-            max-width: 120px;
+            height: 42px;
+            max-width: 110px;
             object-fit: contain;
-            margin: -2px auto -10px auto;
+            margin: -4px auto -9px auto;
             display: block;
             position: relative;
             z-index: 5;
@@ -176,46 +302,75 @@
             font-weight: bold;
         }
 
-        
         .code-text {
             position: absolute;
-            bottom: 5px;
-            left: 5px;
+            bottom: 4px;
+            left: 4px;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 10px;
             transform: rotate(-90deg);
             transform-origin: left bottom;
+            white-space: nowrap;
         }
 
         /* Container untuk tampilan layar */
         #preview-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 18px;
             justify-content: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Custom Button Styling */
+        .btn-action {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-action:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.3);
+        }
+        .btn-action:active:not(:disabled) {
+            transform: translateY(0);
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 md:p-8 font-sans text-gray-800">
+<body class="min-h-screen p-4 md:p-8 font-sans text-gray-800 relative overflow-x-hidden">
 
-    <div class="max-w-4xl mx-auto mb-8 bg-white p-6 rounded-lg shadow-md no-print border border-gray-200">
-        <h1 class="text-2xl font-bold mb-4 text-center text-green-800">Aplikasi Cetak Kartu Ujian</h1>
+    <!-- Elemen Animasi Background di Layar -->
+    <div class="bg-blob blob-1 no-print"></div>
+    <div class="bg-blob blob-2 no-print"></div>
+    <div class="bg-blob blob-3 no-print"></div>
+    <div class="bg-grid-overlay no-print"></div>
+
+    <div class="max-w-4xl mx-auto mb-8 glass-panel p-6 rounded-2xl no-print relative z-10">
+        <div class="flex items-center justify-center gap-2 mb-2">
+            <span class="inline-block w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+            <h1 class="text-2xl md:text-3xl font-extrabold text-center bg-gradient-to-r from-green-700 via-emerald-600 to-teal-800 bg-clip-text text-transparent">Aplikasi Cetak Kartu Ujian</h1>
+        </div>
+        <p class="text-center text-xs text-gray-500 mb-6 font-medium">Sistem Automasi Kartu Ujian A4 - SMP Muhammadiyah 2 Depok</p>
         
-        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <h2 class="font-semibold text-blue-800 mb-2">Petunjuk Penggunaan:</h2>
-            <ol class="list-decimal list-inside text-sm text-blue-700 space-y-1">
+        <div class="mb-6 p-4 bg-emerald-50/80 border border-emerald-200/80 rounded-xl backdrop-blur-sm">
+            <h2 class="font-bold text-emerald-900 mb-2 flex items-center gap-2 text-sm">
+                <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                </svg>
+                Petunjuk Penggunaan:
+            </h2>
+            <ol class="list-decimal list-inside text-xs text-emerald-800 space-y-1">
                 <li>Buat file Excel / Spreadsheet berisi data siswa.</li>
                 <li>Pastikan baris pertama adalah judul kolom: <strong>No_Peserta, Nama, Kelas, NISN, Ruang, Kode</strong>.</li>
                 <li>Simpan file tersebut dalam format <strong>CSV (Comma Delimited)</strong>.</li>
                 <li>Klik tombol di bawah untuk mengunggah file CSV tersebut.</li>
-                <li>Klik "Cetak Kartu" untuk memunculkan dialog print.</li>
+                <li>Klik "Cetak Kartu" untuk mencetak otomatis 10 kartu per lembar A4.</li>
             </ol>
         </div>
 
-        <div class="flex flex-col md:flex-row items-center gap-4 justify-center">
-            <div class="relative">
+        <div class="flex flex-col md:flex-row items-center gap-3 justify-center">
+            <div class="relative w-full md:w-auto">
                 <input type="file" id="csv-upload" accept=".csv" class="hidden">
-                <label for="csv-upload" class="cursor-pointer flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2 px-6 rounded-md shadow-sm transition duration-200 font-medium">
+                <label for="csv-upload" class="btn-action cursor-pointer flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white py-2.5 px-6 rounded-xl shadow-md transition duration-200 font-semibold text-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                     </svg>
@@ -223,30 +378,38 @@
                 </label>
             </div>
             
-            <button onclick="window.print()" id="print-btn" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-md shadow-sm transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <button onclick="window.print()" id="print-btn" class="btn-action flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-2.5 px-6 rounded-xl shadow-md transition duration-200 font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:transform-none" disabled>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
                 Cetak Kartu
             </button>
 
-            <button onclick="loadSampleData()" class="text-sm text-gray-500 underline hover:text-gray-700 mt-2 md:mt-0">
+            <button onclick="clearData()" id="clear-btn" class="btn-action flex items-center justify-center gap-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white py-2.5 px-6 rounded-xl shadow-md transition duration-200 font-semibold text-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:transform-none" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Hapus Data
+            </button>
+
+            <button onclick="loadSampleData()" class="text-xs text-slate-600 hover:text-slate-900 underline font-semibold transition mt-2 md:mt-0 px-2 py-1">
                 Gunakan Data Contoh
             </button>
         </div>
         
-        <div id="status-message" class="mt-4 text-center text-sm font-medium h-5"></div>
+        <div id="status-message" class="mt-4 text-center text-sm font-semibold h-5 transition-all"></div>
     </div>
 
     <!-- Area ini yang akan dicetak -->
-    <div class="print-area">
+    <div class="print-area relative z-10">
         <div id="preview-container" class="cards-container">
             <!-- Kartu akan digenerate di sini oleh JavaScript -->
-            <div class="text-center w-full text-gray-400 py-10 no-print" id="empty-state">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <div class="text-center w-full text-slate-300 py-16 no-print glass-panel rounded-2xl border border-white/30" id="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-3 text-slate-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Belum ada data. Silakan unggah file CSV atau gunakan data contoh.
+                <p class="font-medium text-slate-600">Belum ada data kartu yang dimuat.</p>
+                <p class="text-xs text-slate-400 mt-1">Silakan unggah file CSV atau klik "Gunakan Data Contoh".</p>
             </div>
         </div>
     </div>
@@ -256,22 +419,24 @@
         const csvUpload = document.getElementById('csv-upload');
         const previewContainer = document.getElementById('preview-container');
         const printBtn = document.getElementById('print-btn');
+        const clearBtn = document.getElementById('clear-btn');
         const statusMessage = document.getElementById('status-message');
         const emptyState = document.getElementById('empty-state');
 
         // Template HTML untuk satu kartu
-        // Desain disesuaikan semirip mungkin dengan gambar yang diberikan
-        function createCardHTML(data) {
-            // Default nilai jika data kosong
+        function createCardHTML(data, index) {
             const noPeserta = data.No_Peserta || '-';
             const nama = data.Nama || '-';
             const kelas = data.Kelas || '-';
             const nisn = data.NISN || '-';
             const ruang = data.Ruang || '-';
-            const kode = data.Kode || ''; // Teks vertikal di kiri bawah
+            const kode = data.Kode || '';
+
+            // Dynamic animation delay for staggered card entrances
+            const delay = Math.min((index % 10) * 0.05, 0.5);
 
             return `
-                <div class="card-wrapper">
+                <div class="card-wrapper" style="animation-delay: ${delay}s">
                     <div class="exam-card">
                         <div class="card-inner-border">
                             
@@ -292,8 +457,6 @@
                                     <div class="info-label">No. Pes</div>
                                     <div class="info-colon">:</div>
                                     <div class="info-value">${noPeserta}</div>
-                                    
-                                    <!-- Teks Ruang diletakkan sejajar dengan No Peserta -->
                                     <div class="room-text-container">RUANG ${ruang}</div>
                                 </div>
                                 <div class="info-row">
@@ -336,9 +499,8 @@
             const file = e.target.files[0];
             if (!file) return;
 
-            // Validasi ekstensi
             if (!file.name.endsWith('.csv')) {
-                showMessage('Harap unggah file dengan format .csv', 'text-red-600');
+                showMessage('Harap unggah file dengan format .csv', 'text-rose-600');
                 return;
             }
 
@@ -348,18 +510,17 @@
                 processData(text);
             };
             reader.onerror = function() {
-                showMessage('Gagal membaca file.', 'text-red-600');
+                showMessage('Gagal membaca file.', 'text-rose-600');
             };
             reader.readAsText(file);
         });
 
-        // Fungsi sederhana untuk memparsing CSV
+        // Parse CSV
         function parseCSV(str) {
             const arr = [];
             let quote = false;
             let row, col, c;
             
-            // Penanganan baris baru yang aman (Windows/Unix)
             str = str.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
             for (row = col = c = 0; c < str.length; c++) {
@@ -377,37 +538,31 @@
             return arr;
         }
 
-        // Memproses string CSV menjadi data objek dan merender kartu
+        // Memproses data
         function processData(csvText) {
             try {
                 const rows = parseCSV(csvText);
                 
-                // Hapus baris kosong di akhir
                 if (rows.length > 0 && rows[rows.length - 1].length <= 1 && !rows[rows.length - 1][0]) {
                     rows.pop();
                 }
 
                 if (rows.length < 2) {
-                    showMessage('File CSV kosong atau tidak memiliki data.', 'text-red-600');
+                    showMessage('File CSV kosong atau tidak memiliki data.', 'text-rose-600');
                     return;
                 }
 
-                // Mengambil header (baris pertama)
                 const headers = rows[0].map(h => h.trim().toLowerCase());
-                
                 const dataPeserta = [];
                 
-                // Mulai dari baris ke-2 (index 1)
                 for (let i = 1; i < rows.length; i++) {
                     const row = rows[i];
                     const obj = {};
                     
-                    // Memetakan nilai ke nama kolom berdasarkan index
                     headers.forEach((header, index) => {
                         obj[header] = row[index] ? row[index].trim() : '';
                     });
                     
-                    // Normalisasi nama properti (jaga-jaga penamaan kolom beda sedikit)
                     const item = {
                         No_Peserta: obj['no_peserta'] || obj['no. peserta'] || obj['nopes'] || '',
                         Nama: obj['nama'] || obj['nama_lengkap'] || '',
@@ -421,45 +576,69 @@
                 }
 
                 renderCards(dataPeserta);
-                showMessage(`Berhasil memuat ${dataPeserta.length} data.`, 'text-green-600');
+                showMessage(`Berhasil memuat ${dataPeserta.length} data kartu peserta.`, 'text-emerald-700');
                 printBtn.disabled = false;
+                clearBtn.disabled = false;
 
             } catch (error) {
                 console.error(error);
-                showMessage('Terjadi kesalahan saat memproses data CSV.', 'text-red-600');
+                showMessage('Terjadi kesalahan saat memproses data CSV.', 'text-rose-600');
             }
         }
 
-        // Merender HTML ke layar
+        // Render kartu
         function renderCards(data) {
             if (emptyState) emptyState.style.display = 'none';
             
             let htmlContent = '';
-            data.forEach(item => {
-                htmlContent += createCardHTML(item);
+            data.forEach((item, index) => {
+                htmlContent += createCardHTML(item, index);
             });
             
             previewContainer.innerHTML = htmlContent;
         }
 
-        // Menampilkan pesan status
+        // Tampilkan pesan status
         function showMessage(msg, colorClass) {
             statusMessage.textContent = msg;
-            statusMessage.className = `mt-4 text-center text-sm font-medium h-5 ${colorClass}`;
+            statusMessage.className = `mt-4 text-center text-sm font-semibold h-5 transition-all ${colorClass}`;
             setTimeout(() => {
                 statusMessage.textContent = '';
             }, 5000);
         }
 
-        // Fungsi untuk me-load data contoh
+        // Data contoh
         function loadSampleData() {
             const sampleCSV = `No_Peserta,Nama,Kelas,NISN,Ruang,Kode
 04-0087-062-9,ILHAM FAHLEVI,9C,0112920418,11,A442U
 04-0087-063-8,ANDI DARMAWAN,9A,0112920419,11,A442V
 04-0087-064-7,SITI AMINAH,9B,0112920420,12,A442W
-04-0087-065-6,BUDI SANTOSO,9C,0112920421,12,A442X`;
+04-0087-065-6,BUDI SANTOSO,9C,0112920421,12,A442X
+04-0087-066-5,DEWI SARTIKA,9A,0112920422,12,A442Y
+04-0087-067-4,EKO PRABOVO,9B,0112920423,13,A442Z
+04-0087-068-3,FARAH DIBA,9C,0112920424,13,A443A
+04-0087-069-2,GITA GUTAMA,9A,0112920425,14,A443B
+04-0087-070-1,HENDRA WIJAYA,9B,0112920426,14,A443C
+04-0087-071-0,INDRA KUSUMA,9C,0112920427,15,A443D`;
             
             processData(sampleCSV);
+        }
+
+        // Hapus data
+        function clearData() {
+            csvUpload.value = '';
+            previewContainer.innerHTML = `
+                <div class="text-center w-full text-slate-300 py-16 no-print glass-panel rounded-2xl border border-white/30" id="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-3 text-slate-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="font-medium text-slate-600">Belum ada data kartu yang dimuat.</p>
+                    <p class="text-xs text-slate-400 mt-1">Silakan unggah file CSV atau klik "Gunakan Data Contoh".</p>
+                </div>
+            `;
+            printBtn.disabled = true;
+            clearBtn.disabled = true;
+            showMessage('Data kartu berhasil dihapus.', 'text-slate-600');
         }
     </script>
 </body>
