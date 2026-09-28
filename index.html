@@ -8,6 +8,11 @@
     <style>
         /* Pengaturan khusus untuk mencetak (Print) */
         @media print {
+            /* Memaksa ukuran kertas A4 Portrait dengan margin 1cm */
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
             body {
                 background: white;
             }
@@ -20,35 +25,36 @@
                 background: transparent !important;
                 box-shadow: none !important;
             }
-            /* Mengatur agar kartu tercetak rapi di halaman */
+            /* Mengatur agar kartu tercetak rapi di halaman (2 kolom x 5 baris) */
             .cards-container {
                 display: grid;
-                grid-template-columns: repeat(2, 1fr); /* 2 kartu per baris */
-                gap: 20px;
-                padding: 20px;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px; /* Jarak antar kartu dikurangi agar muat */
+                padding: 0;
+                justify-items: center;
             }
             .card-wrapper {
-                break-inside: avoid; /* Mencegah kartu terpotong halaman */
+                break-inside: avoid; /* Mencegah kartu terpotong antar halaman */
                 page-break-inside: avoid;
             }
         }
 
-        /* Styling spesifik untuk kartu (mengikuti gambar) */
+        /* Styling spesifik untuk kartu (Dimensi diperkecil agar muat 10 per A4) */
         .exam-card {
-            width: 400px;
-            height: 250px;
-            border: 2px solid #2f5d34; /* Warna hijau gelap mirip di gambar */
-            background-color: #d1e7dd; /* Warna latar hijau muda/kebiruan */
-            padding: 4px;
+            width: 340px;  /* Lebar disesuaikan */
+            height: 195px; /* Tinggi disesuaikan */
+            border: 2px solid black;
+            background-color: white;
+            padding: 3px;
             box-sizing: border-box;
             font-family: 'Times New Roman', Times, serif; /* Font resmi */
             position: relative;
         }
 
         .card-inner-border {
-            border: 1px solid #2f5d34;
+            border: 1px solid black;
             height: 100%;
-            padding: 10px;
+            padding: 6px;
             display: flex;
             flex-direction: column;
             position: relative;
@@ -57,54 +63,47 @@
         .header-section {
             display: flex;
             align-items: center;
-            border-bottom: 2px solid #2f5d34;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
+            border-bottom: 2px solid black;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
         }
 
-        .logo-placeholder {
-            width: 50px;
-            height: 50px;
-            border: 1px dashed #2f5d34;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            text-align: center;
-            margin-right: 15px;
+        .logo-img {
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+            margin-right: 10px;
             flex-shrink: 0;
-            background-color: white;
         }
 
         .header-text {
             text-align: center;
             flex-grow: 1;
-            line-height: 1.2;
+            line-height: 1.1;
         }
 
         .header-text h1 {
-            font-size: 14px;
+            font-size: 11px;
             font-weight: bold;
             margin: 0;
         }
 
         .header-text h2 {
-            font-size: 13px;
+            font-size: 10px;
             font-weight: bold;
             margin: 0;
         }
 
         .header-text p {
-            font-size: 10px;
+            font-size: 8px;
             margin: 0;
         }
 
         .info-section {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            font-size: 12px;
+            gap: 2px;
+            font-size: 10px;
             font-weight: bold;
             position: relative;
             z-index: 10;
@@ -112,14 +111,15 @@
 
         .info-row {
             display: flex;
+            position: relative;
         }
 
         .info-label {
-            width: 80px;
+            width: 60px;
         }
 
         .info-colon {
-            width: 15px;
+            width: 10px;
             text-align: center;
         }
 
@@ -127,23 +127,23 @@
             flex-grow: 1;
         }
 
-        /* Posisi Ruang - DIPERBARUI */
+        /* Posisi Ruang */
         .room-text-container {
             position: absolute;
-            right: 10px;
+            right: 5px;
             top: 0;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 11px;
         }
 
         /* Bagian Tanda Tangan */
         .signature-section {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
+            bottom: 5px;
+            right: 5px;
             text-align: center;
-            font-size: 11px;
-            width: 180px;
+            font-size: 9px;
+            width: 150px;
         }
 
         .signature-date {
@@ -152,43 +152,37 @@
 
         .signature-title {
             font-weight: bold;
-            margin-bottom: 30px; /* Ruang untuk stempel dan ttd */
+            margin-bottom: 2px;
+        }
+
+        .signature-img {
+            height: 48px;
+            max-width: 120px;
+            object-fit: contain;
+            margin: -2px auto -10px auto;
+            display: block;
+            position: relative;
+            z-index: 5;
         }
 
         .signature-name {
             font-weight: bold;
             text-decoration: underline;
+            position: relative;
+            z-index: 4;
         }
 
         .signature-nip {
             font-weight: bold;
         }
 
-        /* Stempel/Logo Background (Watermark) */
-        .watermark {
-            position: absolute;
-            bottom: 5px;
-            left: 20px;
-            width: 100px;
-            height: 100px;
-            opacity: 0.15;
-            border: 2px solid #2f5d34;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            text-align: center;
-            transform: rotate(-15deg);
-            z-index: 1;
-        }
         
         .code-text {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
+            bottom: 5px;
+            left: 5px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 11px;
             transform: rotate(-90deg);
             transform-origin: left bottom;
         }
@@ -197,7 +191,7 @@
         #preview-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 15px;
             justify-content: center;
         }
     </style>
@@ -283,7 +277,7 @@
                             
                             <!-- Header -->
                             <div class="header-section">
-                                <div class="logo-placeholder">Logo SMP</div>
+                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEitD0PNHyv9sXz7E8l4nRMtqccsnDUlcrxgX0kHCtec90z2Zf7Ydl0FxYqgD6-TUllq8hRnEGreUWb2O2aTxa6yTrpk42lvEEqVRW-Gtr-byrWW_kf5dXRDa0bCHXKPaZ1y-EB6Uw-78SsM8b6ZJmZLU94IVUHDiay8RHAe9YxdS7DuCYB3Zc3kYbnU_NNT/s1600/logo%20sekolah.png" class="logo-img" alt="Logo Sekolah">
                                 <div class="header-text">
                                     <h1>ASESMEN SUMATIF TENGAH SEMESTER GANJIL</h1>
                                     <h2>SMP MUHAMMADIYAH 2 DEPOK</h2>
@@ -291,9 +285,6 @@
                                     <p>Jl. Swadaya IV Karangasem Condongcatur Depok Sleman</p>
                                 </div>
                             </div>
-
-                            <!-- Watermark / Stempel Background -->
-                            <div class="watermark">STEMPEL PANITIA</div>
 
                             <!-- Informasi Siswa -->
                             <div class="info-section">
@@ -329,7 +320,7 @@
                             <div class="signature-section">
                                 <div class="signature-date">Depok, 18 September 2026</div>
                                 <div class="signature-title">Kepala Sekolah</div>
-                                <!-- Ruang kosong untuk ttd -->
+                                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi6_uirY5bMN3oDAxKO5I313QufwDdwNWBii9FyTwgKFifoPzsOa-5LYrtpW_LQn26H1BN-xeCsX9IJ_2ZnDJuNx_oiMlGOJ6HwvgTzaCxEHtDopYxkJx4ame0EFTbZl5A-pr3w415-lro-yMo_iA7VcnNGdk2NMbbwe_xnYidNb5tL7jDHgeUZgmmBQZvR/s1600/ttd%20Pak%20Hendro.png" class="signature-img" alt="Tanda Tangan Kepala Sekolah">
                                 <div class="signature-name">Hendro Sucipto, M.Pd.</div>
                                 <div class="signature-nip">NBM. 1060557</div>
                             </div>
